@@ -7,7 +7,7 @@ def generate_data(n, d, output_file):
     # Generating non-linearly separable data
     X, _ = make_circles(n_samples=n, factor=0.4, noise=0.05, random_state=42)
 
-    # Pad with zeros if d > 2
+    # Pad with zeros to increase dimensions
     if d > 2:
         padding = np.zeros((n, d - 2))
         X = np.hstack((X, padding))

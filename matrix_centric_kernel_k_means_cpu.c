@@ -3,15 +3,15 @@
 #include <math.h>
 #include <time.h>
 
-#define N 1000
-#define D 2
-#define K_CLUSTERS 2
 #define ITER 10
-#define GAMMA 1.0
-#define COEF 1.0
-#define DEGREE 2.0
 
-int main() {
+int main(int argc, char** argv) {
+    int N = (argc > 1) ? atoi(argv[1]) : 1000;
+    int D = (argc > 2) ? atoi(argv[2]) : 2;
+    int K_CLUSTERS = (argc > 3) ? atoi(argv[3]) : 2;
+
+    double GAMMA = 1.0, COEF = 1.0, DEGREE = 2.0;
+
     double* P = (double*)malloc(N * D * sizeof(double));
     double* B = (double*)malloc(N * N * sizeof(double));
     double* K = (double*)malloc(N * N * sizeof(double));
@@ -23,14 +23,13 @@ int main() {
 
     FILE* f = fopen("data.csv", "r");
     for(int i=0; i<N; i++) {
-        for(int j=0; j<D; j++) fscanf(f, "%lf,", &P[i*D + j]);
-        cluster[i] = i % K_CLUSTERS;
+        for(int j=0; j<D; j++) if(fscanf(f, "%lf,", &P[i*D + j]) != 1) {}
     }
     fclose(f);
 
     clock_t start = clock();
 
-    // Find B using normal matrix multiplication
+    // Normal Matrix Multiplication
     for(int i=0; i<N; i++) {
         for(int j=0; j<N; j++) {
             double sum = 0;
@@ -39,23 +38,35 @@ int main() {
         }
     }
 
-    // Compute K
     for(int i=0; i<N*N; i++) {
         K[i] = pow(GAMMA * B[i] + COEF, DEGREE);
     }
+
+    srand(42);
+    int* init_pts = (int*)malloc(K_CLUSTERS * sizeof(int));
+    for(int j=0; j<K_CLUSTERS; j++) init_pts[j] = rand() % N;
+    for(int i=0; i<N; i++) {
+        double min_dist = 1e15;
+        int best_j = 0;
+        for(int j=0; j<K_CLUSTERS; j++) {
+            int c_idx = init_pts[j];
+            double dist = K[i*N + i] - 2.0 * K[i*N + c_idx] + K[c_idx*N + c_idx];
+            if(dist < min_dist) { min_dist = dist; best_j = j; }
+        }
+        cluster[i] = best_j;
+    }
+    free(init_pts);
 
     for(int iter=0; iter<ITER; iter++) {
         for(int j=0; j<K_CLUSTERS; j++) count[j] = 0;
         for(int i=0; i<N; i++) count[cluster[i]]++;
 
-        // Form V
         for(int j=0; j<K_CLUSTERS; j++) {
             for(int i=0; i<N; i++) {
                 V[j*N + i] = (cluster[i] == j && count[j] > 0) ? 1.0 / count[j] : 0.0;
             }
         }
 
-        // KV_T = K * V^T using normal matrix multiplication
         for(int i=0; i<N; i++) {
             for(int j=0; j<K_CLUSTERS; j++) {
                 double sum = 0;
@@ -64,18 +75,14 @@ int main() {
             }
         }
 
-        // C_tilde
         for(int j=0; j<K_CLUSTERS; j++) {
             double sum = 0;
             for(int u=0; u<N; u++) {
-                for(int v=0; v<N; v++) {
-                    sum += V[j*N + u] * K[u*N + v] * V[j*N + v];
-                }
+                for(int v=0; v<N; v++) sum += V[j*N + u] * K[u*N + v] * V[j*N + v];
             }
             C_tilde[j] = sum;
         }
 
-        // D = -2 KV_T + P_tilde + C_tilde
         for(int i=0; i<N; i++) {
             int best_j = -1;
             double min_dist = 1e15;

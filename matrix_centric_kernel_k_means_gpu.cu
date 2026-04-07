@@ -2,15 +2,9 @@
 #include <stdlib.h>
 #include <math.h>
 
-#define N 1000
-#define D 2
-#define K_CLUSTERS 2
 #define ITER 10
-#define GAMMA 1.0
-#define COEF 1.0
-#define DEGREE 2.0
 
-__global__ void normal_matmul_B(double* P, double* B) {
+__global__ void normal_matmul_B(double* P, double* B, int N, int D) {
     int i = blockIdx.y * blockDim.y + threadIdx.y;
     int j = blockIdx.x * blockDim.x + threadIdx.x;
     if(i < N && j < N) {
@@ -20,15 +14,14 @@ __global__ void normal_matmul_B(double* P, double* B) {
     }
 }
 
-__global__ void compute_K(double* B, double* K) {
+__global__ void compute_K(double* B, double* K, int N, double GAMMA, double COEF, double DEGREE) {
     int idx = blockIdx.x * blockDim.x + threadIdx.x;
     if(idx < N*N) {
         K[idx] = pow(GAMMA * B[idx] + COEF, DEGREE);
     }
 }
 
-// For simplicity, matrix operations in iteration loop are done similarly
-__global__ void update_dist(double* K, double* V, int* new_cluster, double* C_tilde) {
+__global__ void update_dist(double* K, double* V, int* new_cluster, double* C_tilde, int N, int K_CLUSTERS) {
     int i = blockIdx.x * blockDim.x + threadIdx.x;
     if(i < N) {
         double min_dist = 1e15;
@@ -44,13 +37,18 @@ __global__ void update_dist(double* K, double* V, int* new_cluster, double* C_ti
     }
 }
 
-int main() {
+int main(int argc, char** argv) {
+    int N = (argc > 1) ? atoi(argv[1]) : 1000;
+    int D = (argc > 2) ? atoi(argv[2]) : 2;
+    int K_CLUSTERS = (argc > 3) ? atoi(argv[3]) : 2;
+
+    double GAMMA = 1.0, COEF = 1.0, DEGREE = 2.0;
+
     double *h_P = (double*)malloc(N*D*sizeof(double));
     int *h_cluster = (int*)malloc(N*sizeof(int));
     FILE* f = fopen("data.csv", "r");
     for(int i=0; i<N; i++) {
-        for(int j=0; j<D; j++) fscanf(f, "%lf,", &h_P[i*D + j]);
-        h_cluster[i] = i % K_CLUSTERS;
+        for(int j=0; j<D; j++) if(fscanf(f, "%lf,", &h_P[i*D + j]) != 1) {}
     }
     fclose(f);
 
@@ -69,20 +67,34 @@ int main() {
     cudaEventCreate(&start); cudaEventCreate(&stop);
     cudaEventRecord(start);
 
-    // Normal Matrix Multiplication for B = P P^T
     dim3 threads(16, 16);
     dim3 blocks((N+15)/16, (N+15)/16);
-    normal_matmul_B<<<blocks, threads>>>(d_P, d_B);
+    normal_matmul_B<<<blocks, threads>>>(d_P, d_B, N, D);
 
     int total_threads = 256;
-    compute_K<<<(N*N + total_threads - 1)/total_threads, total_threads>>>(d_B, d_K);
+    compute_K<<<(N*N + total_threads - 1)/total_threads, total_threads>>>(d_B, d_K, N, GAMMA, COEF, DEGREE);
 
     double *h_K = (double*)malloc(N*N*sizeof(double));
     double *h_V = (double*)malloc(K_CLUSTERS*N*sizeof(double));
-    double h_C_tilde[K_CLUSTERS];
-    int h_count[K_CLUSTERS];
+    double *h_C_tilde = (double*)malloc(K_CLUSTERS*sizeof(double));
+    int *h_count = (int*)malloc(K_CLUSTERS*sizeof(int));
 
     cudaMemcpy(h_K, d_K, N*N*sizeof(double), cudaMemcpyDeviceToHost);
+
+    srand(42);
+    int* init_pts = (int*)malloc(K_CLUSTERS * sizeof(int));
+    for(int j=0; j<K_CLUSTERS; j++) init_pts[j] = rand() % N;
+    for(int i=0; i<N; i++) {
+        double min_dist = 1e15;
+        int best_j = 0;
+        for(int j=0; j<K_CLUSTERS; j++) {
+            int c_idx = init_pts[j];
+            double dist = h_K[i*N + i] - 2.0 * h_K[i*N + c_idx] + h_K[c_idx*N + c_idx];
+            if(dist < min_dist) { min_dist = dist; best_j = j; }
+        }
+        h_cluster[i] = best_j;
+    }
+    free(init_pts);
 
     for(int iter=0; iter<ITER; iter++) {
         for(int j=0; j<K_CLUSTERS; j++) h_count[j] = 0;
@@ -105,7 +117,7 @@ int main() {
         cudaMemcpy(d_V, h_V, K_CLUSTERS*N*sizeof(double), cudaMemcpyHostToDevice);
         cudaMemcpy(d_C_tilde, h_C_tilde, K_CLUSTERS*sizeof(double), cudaMemcpyHostToDevice);
 
-        update_dist<<<(N+255)/256, 256>>>(d_K, d_V, d_cluster, d_C_tilde);
+        update_dist<<<(N+255)/256, 256>>>(d_K, d_V, d_cluster, d_C_tilde, N, K_CLUSTERS);
         cudaMemcpy(h_cluster, d_cluster, N*sizeof(int), cudaMemcpyDeviceToHost);
     }
 
@@ -119,5 +131,7 @@ int main() {
     for(int i=0; i<N; i++) fprintf(out, "%d\n", h_cluster[i]);
     fclose(out);
 
+    free(h_P); free(h_cluster); free(h_K); free(h_V); free(h_C_tilde); free(h_count);
+    cudaFree(d_P); cudaFree(d_B); cudaFree(d_K); cudaFree(d_V); cudaFree(d_C_tilde); cudaFree(d_cluster);
     return 0;
 }
