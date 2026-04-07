@@ -1,7 +1,6 @@
 #!/bin/bash
 set -e
 
-# Change dimensions to test performance directly
 N=1000
 D=10
 K=2
@@ -14,7 +13,9 @@ echo "=> Compiling C and CUDA files..."
 gcc kernel_k_means_cpu.c -o cpu_normal -O3 -lm
 nvcc kernel_k_means_gpu.cu -o gpu_normal -O3 -Wno-deprecated-gpu-targets
 gcc matrix_centric_kernel_k_means_cpu.c -o cpu_matrix -O3 -lm
-nvcc matrix_centric_kernel_k_means_gpu.cu -o gpu_matrix -O3 -Wno-deprecated-gpu-targets
+
+# CRITICAL: Added -lcublas to link the cuBLAS library!
+nvcc matrix_centric_kernel_k_means_gpu.cu -o gpu_matrix -O3 -Wno-deprecated-gpu-targets -lcublas
 
 echo "=> Executing algorithms with N=$N, D=$D, K=$K..."
 OUT_CPU_N=$(./cpu_normal $N $D $K)
