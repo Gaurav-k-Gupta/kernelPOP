@@ -19,6 +19,11 @@ int main(int argc, char** argv) {
     double* C_penalty = (double*)malloc(K_CLUSTERS * sizeof(double));
 
     FILE* f = fopen("data.csv", "r");
+
+    if( !f ){
+        printf("File not found!\n");
+    }
+
     for(int i=0; i<N; i++) {
         for(int j=0; j<D; j++) {
             if(fscanf(f, "%lf,", &data[i*D + j]) != 1) { /* handle warning */ }
