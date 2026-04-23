@@ -85,7 +85,9 @@ int main(int argc, char** argv) {
     int K_CLUSTERS = (argc > 3) ? atoi(argv[3]) : 2;
 
     // RBF kernel parameter
-    double GAMMA = 5.0;
+    double GAMMA  = (argc > 4) ? atof(argv[4]) : 5.0;
+    double COEF   = (argc > 5) ? atof(argv[5]) : 1.0;
+    double DEGREE = (argc > 6) ? atof(argv[6]) : 2.0;
 
     double *h_P = (double*)malloc(N * D * sizeof(double));
     int *h_cluster = (int*)malloc(N * sizeof(int));
