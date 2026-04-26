@@ -310,6 +310,8 @@ int main(int argc, char** argv)
     printf("Total GPU time (%s): %.4f seconds\n",
            use_syrk ? "SYRK" : "GEMM", total_ms / 1000.0f);
 
+    printf("%.4f %.4f\n", gram_ms , total_ms);
+
     // ---- Write timing line for Python script ----
     // Format:  method,gram_ms,total_ms
     FILE* tm = fopen("timing.csv", "a");

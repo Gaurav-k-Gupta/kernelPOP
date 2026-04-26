@@ -1,0 +1,4 @@
+https://www.csie.ntu.edu.tw/~cjlin/libsvmtools/datasets/multiclass/vehicle/acoustic_scale.bz2
+https://www.csie.ntu.edu.tw/~cjlin/libsvmtools/datasets/multiclass/letter.scale.tr
+https://www.csie.ntu.edu.tw/~cjlin/libsvmtools/datasets/multiclass/cifar10.bz2
+https://www.csie.ntu.edu.tw/~cjlin/libsvmtools/datasets/multiclass/mnist.scale.bz2
