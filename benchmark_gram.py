@@ -40,7 +40,7 @@ parser.add_argument("--K",     type=int, default=3,   help="Number of clusters")
 parser.add_argument("--gamma", type=float, default=5.0, help="RBF gamma")
 parser.add_argument("--iters", type=int, default=3,
                     help="Repetitions per (N, method) for averaging")
-parser.add_argument("--src",   default="kernel_kmeans_gpu.cu",
+parser.add_argument("--src",   default="matrix_centric_kernel_k_means_gpu.cu",
                     help="Path to the .cu source file")
 parser.add_argument("--bin",   default="./kernel_kmeans_gpu",
                     help="Where to place the compiled binary")
