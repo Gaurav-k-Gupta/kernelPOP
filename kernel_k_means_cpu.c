@@ -9,6 +9,7 @@ int main(int argc, char** argv) {
     int N = (argc > 1) ? atoi(argv[1]) : 1000;
     int D = (argc > 2) ? atoi(argv[2]) : 2;
     int K_CLUSTERS = (argc > 3) ? atoi(argv[3]) : 2;
+    char* fname = (argc > 4) ? argv[4] : "data.csv";
 
     double GAMMA = 1.0, COEF = 1.0, DEGREE = 2.0;
 
@@ -18,7 +19,7 @@ int main(int argc, char** argv) {
     int* count = (int*)malloc(K_CLUSTERS * sizeof(int));
     double* C_penalty = (double*)malloc(K_CLUSTERS * sizeof(double));
 
-    FILE* f = fopen("data.csv", "r");
+    FILE* f = fopen(fname, "r");
 
     if( !f ){
         printf("File not found!\n");

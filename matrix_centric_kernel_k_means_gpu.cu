@@ -175,6 +175,9 @@ int main(int argc, char** argv)
     int use_syrk = 0;
     if (argc > 7 && strcmp(argv[7], "syrk") == 0) use_syrk = 1;
 
+    //8th arg -> data file
+    const char* fname = (argc > 8) ? argv[8] : "data.csv";
+
     printf("Method: %s | N=%d  D=%d  K=%d  gamma=%.2f\n",
            use_syrk ? "SYRK" : "GEMM", N, D, K_CLUSTERS, GAMMA);
 
@@ -182,8 +185,8 @@ int main(int argc, char** argv)
     double* h_P       = (double*)malloc(N * D * sizeof(double));
     int*    h_cluster = (int*)   malloc(N      * sizeof(int));
 
-    FILE* f = fopen("data.csv", "r");
-    if (!f) { printf("Could not open data.csv\n"); return 1; }
+    FILE* f = fopen(fname, "r");
+    if (!f) { printf("Could not open <%s>\n", fname); return 1; }
     for (int i = 0; i < N; i++)
         for (int j = 0; j < D; j++)
             if (fscanf(f, "%lf,", &h_P[i * D + j]) != 1) {

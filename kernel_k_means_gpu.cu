@@ -42,12 +42,19 @@ int main(int argc, char** argv) {
     int N = (argc > 1) ? atoi(argv[1]) : 1000;
     int D = (argc > 2) ? atoi(argv[2]) : 2;
     int K_CLUSTERS = (argc > 3) ? atoi(argv[3]) : 2;
+    const char* fname = (argc > 4) ? argv[4] : "data.csv";
 
     double GAMMA = 1.0, COEF = 1.0, DEGREE = 2.0;
 
     double *h_data = (double*)malloc(N*D*sizeof(double));
     int *h_cluster = (int*)malloc(N*sizeof(int));
-    FILE* f = fopen("data.csv", "r");
+    FILE* f = fopen(fname, "r");
+
+    if( !f ){
+        printf("file not found! <%s>\n", fname);
+        return 0;
+    }
+
     for(int i=0; i<N; i++) {
         for(int j=0; j<D; j++) if(fscanf(f, "%lf,", &h_data[i*D + j]) != 1) {}
     }

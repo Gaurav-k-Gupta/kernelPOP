@@ -10,6 +10,8 @@ int main(int argc, char** argv) {
     int D = (argc > 2) ? atoi(argv[2]) : 2;
     int K_CLUSTERS = (argc > 3) ? atoi(argv[3]) : 2;
 
+    const char* fname = (argc > 4) ? argv[4] : "data.csv";
+
     double GAMMA = 1.0, COEF = 1.0, DEGREE = 2.0;
 
     double* P = (double*)malloc(N * D * sizeof(double));
@@ -21,7 +23,13 @@ int main(int argc, char** argv) {
     int* cluster = (int*)malloc(N * sizeof(int));
     int* count = (int*)malloc(K_CLUSTERS * sizeof(int));
 
-    FILE* f = fopen("data.csv", "r");
+    FILE* f = fopen(fname, "r");
+
+    if( !f ){
+        printf("File not found <%s>\n", fname );
+        return 0;
+    }
+
     for(int i=0; i<N; i++) {
         for(int j=0; j<D; j++) if(fscanf(f, "%lf,", &P[i*D + j]) != 1) {}
     }
