@@ -112,6 +112,9 @@ __global__ void compute_K(double* B, double* K, int N, double GAMMA)
     }
 }
 
+/* 	
+𝐃=−𝟐⁢𝐊⁢𝐕𝐓+𝐏~+𝐂~
+*/	
 // Computes E = K * V  (V = cluster membership matrix, stored implicitly)
 __global__ void compute_E(double* K, int* cluster, int* count, double* E,
                            int N, int K_CLUSTERS)

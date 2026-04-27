@@ -31,7 +31,7 @@ echo "=> Detected Dataset: $DATA_FILE with N=$N and D=$D"
 GAMMAS=(0.01 0.1 1.0 5.0 10.0 50.0)
 
 echo "=> Setting up python environment..."
-pip install -r requirements.txt -q
+# pip install -r requirements.txt -q
 
 echo "=> Compiling C and CUDA files..."
 gcc kernel_k_means_cpu.c -o cpu_normal -O3 -lm
