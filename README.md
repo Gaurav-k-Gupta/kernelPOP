@@ -15,14 +15,29 @@ This project evaluates the speedup introduced by framing Kernel K-Means clusteri
    pip install -r requirements.txt
    ```
 
-2. **Run the Master Script**
+2. **Compile**
+You can compile the implementations using the following commands. Ensure you link the necessary NVIDIA math libraries for the matrix-centric build:
+
+```bash
+# 1. CPU Baseline
+gcc kernel_k_means_cpu.c -o cpu_normal -O3 -lm
+
+# 2. GPU Baseline (Custom Kernels)
+nvcc kernel_k_means_gpu.cu -o gpu_normal -O3 -Wno-deprecated-gpu-targets
+
+# 3. GPU Matrix-Centric (Popcorn)
+nvcc matrix_centric_kernel_k_means_gpu.cu -o gpu_matrix -O3 -Wno-deprecated-gpu-targets -lcublas -lcusparse
+```
+
+
+3. **Run the Master Script**
     Give execution rights to the provided bash script and run it. The script handles everything end-to-end:
     ```bash
     chmod +x script.sh
-    ./script.sh
+    ./script.sh data.csv
     ```
 
-3. **What the Script Does:**
+4. **What the Script Does:**
 
     Calls data_generator.py to create a data.csv file with 1000 points arranged in non-linear concentric circles.
 
@@ -35,3 +50,34 @@ This project evaluates the speedup introduced by framing Kernel K-Means clusteri
     Formats the data into a markdown terminal table.
 
     Calls scatter_plot.py to map the points into a generated .png visual confirming convergence.
+
+
+5. **Explore Other Scripts**
+
+    Explore the scripts/ folder to find more scripts to get different results.
+
+    Example:
+
+    ```bash
+    chmod +x gemm_vs_syrk.sh
+    ./gemm_vs_syrk.sh
+
+    chmod +x ./scripts/plot_runtimes.sh
+    ./scripts/plot_runtimes.sh
+
+    chmod +x ./scripts/speedup.sh
+    ./scripts/speedup.sh
+    ```
+
+6. **Datasets and Results**
+
+
+    We have used 4 datasets:-
+    acoustic , cifar10 , letter , mnist
+
+
+
+    Explore folders like Results/ , Runtimes/ , Speedup/ , GEMM_VS_SYRK/
+    to find results 
+
+
